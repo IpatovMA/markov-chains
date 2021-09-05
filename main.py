@@ -5,6 +5,9 @@ import os
 import numpy as np
 import argparse
 
+# python main.py -k 2 --seed 'Ты не' --corpus narnija.txt --len 100
+
+
 parser = argparse.ArgumentParser(description='Build markov chain')
 parser.add_argument("-k", help="Size of context window. Default k=2 .",default=2, type=int)
 parser.add_argument("--seed", help="Chain start word sequence",required=True, type=str)
@@ -82,12 +85,17 @@ def sample_next_word(seq):
 
 
 
+
 def get_chain(seed, chain_length = 15, k = 2,print_result = False):
     seq_words = seed.split(" ")
 
     if len(seq_words) != k:
         return f"Wrong words count! Expected {k} words, but got {len(seq_words)} ."
     
+    if not seed in seqs_idx_dict.keys():
+        return f"Wrong seed! Try one of this {random.choices(list(seqs_idx_dict.keys()),k=5)} ."
+
+
     if print_result:
         print(seq_words)
 
