@@ -3,20 +3,35 @@ from tqdm import tqdm
 import random
 import os
 import numpy as np
-# from module import *
+import argparse
 
+parser = argparse.ArgumentParser(description='Build markov chain')
+parser.add_argument("-k", help="Size of context window. Default k=2 .",default=2, type=int)
+parser.add_argument("--seed", help="Chain start word sequence",required=True, type=str)
+parser.add_argument("--corpus", help="Filename of text corpus from corpuses dirrectory",default='corpus.txt', type=str)
+parser.add_argument("--len", help="Chain length",default=50, type=int)
+args = parser.parse_args()
+k = args.k
+seed = args.seed
+corpus_fname= args.corpus
+chain_length = args.len
 
+corpus_data = []
 # Загружаем корпус 
-with open('corpus_file.txt','r') as f:
-    corpus = f.read()
+with open('corpuses/'+corpus_fname,'r') as f:
+    corpus_data = f.readlines()
 
-words = corpus.split(' ')
 
-print(f"Load corpus of {len(words)} words")
+c_hash = corpus_data[0][6:-2]
+c_description = corpus_data[1:-1][0][13:-2]
+c_text = corpus_data[-1]
 
-k = 2 # длина цепочки
+words = c_text.split(' ')
 
-cached_fname = f"cache/cache_k_{k}_corp_{len(words)}.npy"
+print(f"Load corpus '{corpus_fname}' : {c_description} of {len(words)} words")
+
+
+cached_fname = f"cache/{c_hash}_k_{k}.npy"
 
 if not os.path.isfile(cached_fname): 
     # кэша нет
@@ -37,7 +52,7 @@ if not os.path.isfile(cached_fname):
         next_word_matrix[seq_idx, next_word_idx] +=1
     print("Done!")
 
-    print("Caching dok matrix . . .")
+    print("Caching . . .")
     if not os.path.isdir('cache'):
         os.mkdir('cache')
 
@@ -50,15 +65,12 @@ if not os.path.isfile(cached_fname):
     print("Done!\n")
 else:
     # кэш есть
-    print("Loading cached dok matrix . . .")
     with open(cached_fname,"br") as f:
         data = np.load(f,allow_pickle=True).item()
         next_word_matrix = data['next_word_matrix']
         seqs_idx_dict = data['seqs_idx_dict']
         distinct_words = data['distinct_words']
 
-
-    print("Done! \n")
 
 
 def sample_next_word(seq):
@@ -70,11 +82,11 @@ def sample_next_word(seq):
 
 
 
-def get_chain(sequence, chain_length = 15, k = 2,print_result = False):
-    seq_words = sequence.split(" ")
+def get_chain(seed, chain_length = 15, k = 2,print_result = False):
+    seq_words = seed.split(" ")
 
     if len(seq_words) != k:
-        return "Wrong words count! Expected {k} words, but got {len(seq_words)} ."
+        return f"Wrong words count! Expected {k} words, but got {len(seq_words)} ."
     
     if print_result:
         print(seq_words)
@@ -89,6 +101,6 @@ def get_chain(sequence, chain_length = 15, k = 2,print_result = False):
 
 
 print("Writing text . . .")
-result_text = get_chain("вышел вперед",chain_length = 50,print_result =False )
+result_text = get_chain(seed,chain_length = chain_length,k = k, print_result =False )
 print(result_text)
 
