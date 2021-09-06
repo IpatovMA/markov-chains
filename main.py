@@ -10,7 +10,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Build markov chain')
 parser.add_argument("-k", help="Size of context window. Default k=2 .",default=2, type=int)
-parser.add_argument("--seed", help="Chain start word sequence",required=True, type=str)
+parser.add_argument("--seed", help="Chain start word sequence", type=str)
 parser.add_argument("--corpus", help="Filename of text corpus from corpuses dirrectory",default='corpus.txt', type=str)
 parser.add_argument("--len", help="Chain length",default=50, type=int)
 args = parser.parse_args()
@@ -109,6 +109,10 @@ def get_chain(seed, chain_length = 15, k = 2,print_result = False):
 
 
 print("Writing text . . .")
+
+if not seed: 
+    seed = random.choice(list(seqs_idx_dict.keys()))
+
 result_text = get_chain(seed,chain_length = chain_length,k = k, print_result =False )
 print(result_text)
 
