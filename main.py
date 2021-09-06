@@ -10,9 +10,9 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Build markov chain')
 parser.add_argument("-k", help="Size of context window. Default k=2 .",default=2, type=int)
-parser.add_argument("--seed", help="Chain start word sequence", type=str)
-parser.add_argument("--corpus", help="Filename of text corpus from corpuses dirrectory",default='corpus.txt', type=str)
-parser.add_argument("--len", help="Chain length",default=50, type=int)
+parser.add_argument("--seed", help="Start word sequence", type=str)
+parser.add_argument("--corpus", help="File name of the text corpus from the '/corpuses' directory",default='corpus.txt', type=str)
+parser.add_argument("--len", help="Generated text length",default=50, type=int)
 args = parser.parse_args()
 k = args.k
 seed = args.seed
