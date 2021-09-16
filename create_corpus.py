@@ -16,49 +16,79 @@ AVALIABLE_FORMATS = ['txt','fb2','rtf']
 
 corpus =""
 
-if os.path.isdir(all_data_path):
-    if not all_data_path.endswith('/'):
-        all_data_path = all_data_path+"/"
+def format_corpus(corpus):
+
+    # for fb2 source files
+
+    tag = "<[^<,^>]*>"
+    tag_pattern = re.compile(tag)
+    tag_list = re.findall(tag_pattern,corpus)
+    distinct_tags = list(set(tag_list))
+    # len(distinct_tags)
+
+    for tag in distinct_tags:
+        corpus = corpus.replace(tag, ' ')
+    corpus = corpus.replace('\xa0', '')
+    # ----------------------
+    corpus = corpus.replace('\n',' ')
+    corpus = corpus.replace('\r',' ')
+    corpus = corpus.replace('\t',' ')
+    corpus = corpus.replace('«', ' " ')
+    corpus = corpus.replace('»', ' " ')
+
+    for spaced in ['…','.',',','!','?','(','—',')','–',":"]:
+        corpus = corpus.replace(spaced, f' {spaced} ')
+
+    return corpus
+
+
+
+
+def read_file(filepath):
+    global corpus
+    with open(filepath, 'rb') as f:
+        byte_data = f.read()
+        try:
+            corpus += format_corpus(byte_data.decode('utf-8'))
+        except UnicodeDecodeError :            
+            corpus += format_corpus(byte_data.decode('windows-1251'))
+
+def read_dir(path):
+    if not path.endswith('/'):
+        path = path+"/"
     
-    filenames = [all_data_path +name for name in os.listdir(all_data_path) if name[(name.rfind('.')+1):] in AVALIABLE_FORMATS]
+    if len(os.listdir(path))==0: 
+        return
+    
+    dirnames = [path +name for name in os.listdir(path) if os.path.isdir(path+name)]
+
+    for dirname in dirnames:
+        read_dir(dirname)
+
+    filenames = [path +name for name in os.listdir(path) if (os.path.isfile(path+name)) and (name[(name.rfind('.')+1):] in AVALIABLE_FORMATS)]
     print(f"Find {len(filenames)} text files: \n{filenames}")
 
     if len(filenames)==0:
-        raise  FileNotFoundError(f'Dirrectory {all_data_path} contain no avaliable files! Only {AVALIABLE_FORMATS} formats are allowed') 
+        print(f'Dirrectory {path} contain no avaliable files! Only {AVALIABLE_FORMATS} formats are allowed') 
 
     for filename in filenames:
-        with open(filename, 'r') as f:
-            corpus += f.read()
+        read_file(filename)
+
+
+if os.path.isdir(all_data_path):
+   read_dir(all_data_path)
 
 elif os.path.isfile(all_data_path):
     if all_data_path[(all_data_path.rfind('.')+1):] in AVALIABLE_FORMATS:
-        with open(all_data_path, 'r') as f:
-            corpus += f.read()
+        read_file(all_data_path)
     else: raise NameError(f'Wrong format! Only {AVALIABLE_FORMATS} formats are allowed')
 else:
     raise FileNotFoundError(f'Cant find file {all_data_path}')
 
+# print(corpus.find('\n'))
 
-# for fb2 source files
+# print(corpus.find('\n'))
 
-tag = "<[^<,^>]*>"
-tag_pattern = re.compile(tag)
-tag_list = re.findall(tag_pattern,corpus)
-distinct_tags = list(set(tag_list))
-len(distinct_tags)
-
-for tag in distinct_tags:
-    corpus = corpus.replace(tag, ' ')
-corpus = corpus.replace('\xa0', '')
-# ----------------------
-
-corpus = corpus.replace('\n',' ')
-corpus = corpus.replace('\t',' ')
-corpus = corpus.replace('«', ' " ')
-corpus = corpus.replace('»', ' " ')
-
-for spaced in ['…','.',',','!','?','(','—',')','–',":"]:
-    corpus = corpus.replace(spaced, f' {spaced} ')
 
 words = corpus.split(' ')
 words= [word for word in words if word != '' and len(word)<30]
@@ -78,3 +108,5 @@ with open(corpus_filename, 'w') as cf:
     r = cf.write(corpus_info + corpus)
 
 print(f"Save corpus of {len(words)} words in {corpus_filename} is {bool(r)}")
+
+print
