@@ -2,15 +2,20 @@ import os
 import re
 from hashlib import md5
 import argparse
+import nltk
 
 parser = argparse.ArgumentParser(description='Create text corpus')
 parser.add_argument("--path", help="Path to source file or dirrectory",default="text", type=str)
 parser.add_argument("--title", help="Corpus title",default="corpus", type=str)
 parser.add_argument("--descr", help="Corpus description",default="This corpus has no description", type=str)
+parser.add_argument('-nl', help = 'Dont drop new line symbols.', action='store_true')
 args = parser.parse_args()
 all_data_path = args.path
 title = args.title
 description = args.descr
+drop_nl = not args.nl
+
+print(f'drop_nl {drop_nl}')
 
 AVALIABLE_FORMATS = ['txt','fb2','rtf']
 
@@ -30,18 +35,25 @@ def format_corpus(corpus):
         corpus = corpus.replace(tag, ' ')
     corpus = corpus.replace('\xa0', '')
     # ----------------------
-    corpus = corpus.replace('\n',' ')
+    if drop_nl:
+        corpus = corpus.replace('\n',' ')
     corpus = corpus.replace('\r',' ')
     corpus = corpus.replace('\t',' ')
     corpus = corpus.replace('«', ' " ')
     corpus = corpus.replace('»', ' " ')
 
-    for spaced in ['…','.',',','!','?','(','—',')','–',":"]:
+    spaced_list = ['…','.',',','!','?','(','—',')','–',":"]
+    if not drop_nl:
+        spaced_list.append('\n')
+
+    for spaced in spaced_list:
         corpus = corpus.replace(spaced, f' {spaced} ')
 
     return corpus
 
-
+def tokenize(corpus):
+    tok = nltk.WordPunctTokenizer()
+    return " ".join(tok.tokenize(corpus))
 
 
 def read_file(filepath):
@@ -49,9 +61,9 @@ def read_file(filepath):
     with open(filepath, 'rb') as f:
         byte_data = f.read()
         try:
-            corpus += format_corpus(byte_data.decode('utf-8'))
+            corpus += tokenize(byte_data.decode('utf-8'))
         except UnicodeDecodeError :            
-            corpus += format_corpus(byte_data.decode('windows-1251'))
+            corpus += tokenize(byte_data.decode('windows-1251'))
 
 def read_dir(path):
     if not path.endswith('/'):
